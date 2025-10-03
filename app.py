@@ -493,43 +493,101 @@ def time_ago(s: str) -> str:
         return "just now"
 
 def copy_button_html(text: str, button_id: str = "copy-btn") -> str:
-    safe_text = json.dumps(text)
+    safe_text = text.replace("'", "\\'")
+    unique_id = f"{button_id}_{hash(text) % 10000}"
     return f"""
-    <button id="{button_id}" style="
-        background: white;
-        border: 2px solid #667eea;
-        color: #667eea;
-        padding: 0.6rem 1.5rem;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 600;
-        font-size: 0.9rem;
-        transition: all 0.3s ease;
-        width: 100%;
-    " onclick="
-        navigator.clipboard.writeText({safe_text}).then(() => {{
-            this.innerHTML = '✓ Copied!';
-            this.style.background = '#10b981';
-            this.style.borderColor = '#10b981';
-            this.style.color = 'white';
-            setTimeout(() => {{
-                this.innerHTML = '📋 Copy Email';
+    <div style="margin-top: 8px;">
+        <button id="{unique_id}" style="
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 0.6rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            width: 100%;
+        " onmouseover="
+            if(!this.classList.contains('copied')) {{
+                this.style.background = '#667eea';
+                this.style.color = 'white';
+            }}
+        " onmouseout="
+            if(!this.classList.contains('copied')) {{
                 this.style.background = 'white';
-                this.style.borderColor = '#667eea';
                 this.style.color = '#667eea';
-            }}, 2000);
-        }});
-    " onmouseover="
-        this.style.background = '#667eea';
-        this.style.color = 'white';
-    " onmouseout="
-        if(this.innerHTML === '📋 Copy Email') {{
-            this.style.background = 'white';
-            this.style.color = '#667eea';
-        }}
-    ">
-        📋 Copy Email
-    </button>
+            }}
+        ">
+            📋 Copy Email
+        </button>
+    </div>
+    <script>
+        (function() {{
+            const btn = document.getElementById('{unique_id}');
+            if(btn) {{
+                btn.addEventListener('click', function() {{
+                    const textToCopy = '{safe_text}';
+                    
+                    // Try modern clipboard API first
+                    if (navigator.clipboard && navigator.clipboard.writeText) {{
+                        navigator.clipboard.writeText(textToCopy).then(() => {{
+                            btn.innerHTML = '✓ Copied!';
+                            btn.style.background = '#10b981';
+                            btn.style.borderColor = '#10b981';
+                            btn.style.color = 'white';
+                            btn.classList.add('copied');
+                            
+                            setTimeout(() => {{
+                                btn.innerHTML = '📋 Copy Email';
+                                btn.style.background = 'white';
+                                btn.style.borderColor = '#667eea';
+                                btn.style.color = '#667eea';
+                                btn.classList.remove('copied');
+                            }}, 2000);
+                        }}).catch(err => {{
+                            console.error('Clipboard error:', err);
+                            fallbackCopy(textToCopy);
+                        }});
+                    }} else {{
+                        fallbackCopy(textToCopy);
+                    }}
+                }});
+            }}
+            
+            function fallbackCopy(text) {{
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                try {{
+                    document.execCommand('copy');
+                    const btn = document.getElementById('{unique_id}');
+                    btn.innerHTML = '✓ Copied!';
+                    btn.style.background = '#10b981';
+                    btn.style.borderColor = '#10b981';
+                    btn.style.color = 'white';
+                    btn.classList.add('copied');
+                    
+                    setTimeout(() => {{
+                        btn.innerHTML = '📋 Copy Email';
+                        btn.style.background = 'white';
+                        btn.style.borderColor = '#667eea';
+                        btn.style.color = '#667eea';
+                        btn.classList.remove('copied');
+                    }}, 2000);
+                }} catch (err) {{
+                    alert('Copy failed. Please copy manually: ' + text);
+                }}
+                
+                document.body.removeChild(textArea);
+            }}
+        }})();
+    </script>
     """
 
 def pick_provider(name: str) -> TempMailProvider:
