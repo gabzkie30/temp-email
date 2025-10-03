@@ -677,8 +677,7 @@ def render_email_display():
         """, unsafe_allow_html=True)
     
     with col2:
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.components.v1.html(copy_button_html(email), height=60)
+        st.components.v1.html(copy_button_html(email), height=80)
 
 def render_message_card(msg: Dict, provider: TempMailProvider, state: Dict):
     msg_id = str(msg.get("id"))
@@ -798,7 +797,7 @@ with st.sidebar:
     st.markdown(f"""
     <div style="padding: 1rem; background: #f3f4f6; border-radius: 8px;">
         <span class="status-indicator {status_color}"></span>
-        <span style="font-weight: 600;">Status: {status.title()}</span>
+        <span style="font-weight: 600; color: #1f2937;">Status: {status.title()}</span>
     </div>
     """, unsafe_allow_html=True)
     
