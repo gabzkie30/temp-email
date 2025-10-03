@@ -414,13 +414,15 @@ class MailTmProvider(TempMailProvider):
         token = state["token"]
         d = self._get(f"/messages/{msg_id}", token=token)
         sender = d.get("from", {})
+        text_body = d.get("text")
+        html_body = d.get("html")
         return {
             "id": d.get("id"),
             "from": sender.get("address") or sender.get("name") or "",
             "subject": d.get("subject") or "",
             "date": d.get("receivedAt") or "",
-            "textBody": d.get("text") or "",
-            "htmlBody": d.get("html") or "",
+            "textBody": str(text_body) if text_body else "",
+            "htmlBody": str(html_body) if html_body else "",
             "attachments": d.get("attachments") or [],
         }
 
@@ -714,6 +716,9 @@ def render_message_card(msg: Dict, provider: TempMailProvider, state: Dict):
         
         with tab1:
             text_body = d.get("textBody") or ""
+            # Ensure it's a string
+            if not isinstance(text_body, str):
+                text_body = str(text_body) if text_body else ""
             if text_body.strip():
                 st.text_area("Message Content", text_body, height=300, disabled=True, label_visibility="collapsed")
             else:
@@ -721,6 +726,9 @@ def render_message_card(msg: Dict, provider: TempMailProvider, state: Dict):
         
         with tab2:
             html_body = d.get("htmlBody") or ""
+            # Ensure it's a string
+            if not isinstance(html_body, str):
+                html_body = str(html_body) if html_body else ""
             if html_body.strip():
                 st.code(html_body, language="html", line_numbers=True)
             else:
